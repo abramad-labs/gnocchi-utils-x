@@ -1,14 +1,13 @@
 package measures
 
 import (
-	"context"
 	"fmt"
 	"net/url"
 	"time"
 
-	"github.com/gophercloud/gophercloud/v2"
-	"github.com/gophercloud/gophercloud/v2/pagination"
-	"github.com/gophercloud/utils/v2/gnocchi"
+	"github.com/gophercloud/gophercloud"
+	"github.com/gophercloud/gophercloud/pagination"
+	"github.com/gophercloud/utils/gnocchi"
 )
 
 // ListOptsBuilder allows extensions to add additional parameters to the
@@ -122,13 +121,13 @@ func (opts CreateOpts) ToMeasureCreateMap() (map[string]interface{}, error) {
 }
 
 // Create requests the creation of a new measures in the single Gnocchi metric.
-func Create(ctx context.Context, client *gophercloud.ServiceClient, metricID string, opts CreateOptsBuilder) (r CreateResult) {
+func Create(client *gophercloud.ServiceClient, metricID string, opts CreateOptsBuilder) (r CreateResult) {
 	b, err := opts.ToMeasureCreateMap()
 	if err != nil {
 		r.Err = err
 		return
 	}
-	_, r.Err = client.Post(ctx, createURL(client, metricID), b["measures"], &r.Body, &gophercloud.RequestOpts{
+	_, r.Err = client.Post(createURL(client, metricID), b["measures"], &r.Body, &gophercloud.RequestOpts{
 		OkCodes: []int{202},
 		MoreHeaders: map[string]string{
 			"Accept": "application/json, */*",
@@ -152,6 +151,48 @@ type MetricOpts struct {
 
 	// Measures is a set of measures for a single metric that needs to be created.
 	Measures []MeasureOpts
+}
+
+func MapToMeasure(measuresSlice [][]interface{}) ([]Measure, error) {
+	var err error
+	measures := make([]Measure, len(measuresSlice))
+
+	for i, m := range measuresSlice {
+		var measure Measure
+		if len(m) != 3 {
+			errMsg := fmt.Sprintf("got an invalid measure: %v", measuresSlice)
+			return measures, fmt.Errorf(errMsg)
+		}
+
+		// Populate a measure's timestamp.
+		var timeStamp string
+		var ok bool
+		if timeStamp, ok = m[0].(string); !ok {
+			errMsg := fmt.Sprintf("got an invalid timestamp of a measure %v: %v", measuresSlice, measuresSlice[0])
+			return measures, fmt.Errorf(errMsg)
+		}
+		measure.Timestamp, err = time.Parse(gnocchi.RFC3339NanoTimezone, timeStamp)
+		if err != nil {
+			return measures, err
+		}
+
+		// Populate a measure's granularity.
+		if measure.Granularity, ok = m[1].(float64); !ok {
+			errMsg := fmt.Sprintf("got an invalid granularity of a measure %v: %v", measuresSlice, measuresSlice[1])
+			return measures, fmt.Errorf(errMsg)
+		}
+
+		// Populate a measure's value.
+		if measure.Value = m[2].(float64); !ok {
+			errMsg := fmt.Sprintf("got an invalid value of a measure %v: %v", measuresSlice, measuresSlice[2])
+			return measures, fmt.Errorf(errMsg)
+		}
+
+		measures[i] = measure
+
+	}
+
+	return measures, nil
 }
 
 // ToMap is a helper function to convert individual MetricOpts structure into a sub-map.
@@ -203,14 +244,14 @@ func (opts BatchCreateMetricsOpts) ToMeasuresBatchCreateMetricsMap() (map[string
 }
 
 // BatchCreateMetrics requests the creation of a new measures for different metrics.
-func BatchCreateMetrics(ctx context.Context, client *gophercloud.ServiceClient, opts BatchCreateMetricsOpts) (r BatchCreateMetricsResult) {
+func BatchCreateMetrics(client *gophercloud.ServiceClient, opts BatchCreateMetricsOpts) (r BatchCreateMetricsResult) {
 	b, err := opts.ToMeasuresBatchCreateMetricsMap()
 	if err != nil {
 		r.Err = err
 		return
 	}
 
-	_, r.Err = client.Post(ctx, batchCreateMetricsURL(client), b["batchCreateMetrics"], &r.Body, &gophercloud.RequestOpts{
+	_, r.Err = client.Post(batchCreateMetricsURL(client), b["batchCreateMetrics"], &r.Body, &gophercloud.RequestOpts{
 		OkCodes: []int{202},
 		MoreHeaders: map[string]string{
 			"Accept": "application/json, */*",
@@ -373,7 +414,7 @@ func (opts BatchCreateResourcesMetricsOpts) ToMeasuresBatchCreateResourcesMetric
 }
 
 // BatchCreateResourcesMetrics requests the creation of new measures inside metrics via resource IDs and metric names.
-func BatchCreateResourcesMetrics(ctx context.Context, client *gophercloud.ServiceClient, opts BatchCreateResourcesMetricsOptsBuilder) (r BatchCreateResourcesMetricsResult) {
+func BatchCreateResourcesMetrics(client *gophercloud.ServiceClient, opts BatchCreateResourcesMetricsOptsBuilder) (r BatchCreateResourcesMetricsResult) {
 	url := batchCreateResourcesMetricsURL(client)
 	if opts != nil {
 		query, err := opts.ToMeasuresBatchCreateResourcesMetricsQuery()
@@ -390,7 +431,7 @@ func BatchCreateResourcesMetrics(ctx context.Context, client *gophercloud.Servic
 		return
 	}
 
-	_, r.Err = client.Post(ctx, url, b["batchCreateResourcesMetrics"], &r.Body, &gophercloud.RequestOpts{
+	_, r.Err = client.Post(url, b["batchCreateResourcesMetrics"], &r.Body, &gophercloud.RequestOpts{
 		OkCodes: []int{202},
 		MoreHeaders: map[string]string{
 			"Accept": "application/json, */*",
