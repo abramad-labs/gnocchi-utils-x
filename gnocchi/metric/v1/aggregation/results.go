@@ -1,8 +1,8 @@
 package aggregation
 
 import (
+	"github.com/abramad-labs/gophercloud-utils-x/gnocchi/metric/v1/measures"
 	"github.com/gophercloud/gophercloud"
-	"github.com/gophercloud/utils/gnocchi/metric/v1/measures"
 )
 
 type GetResult struct {

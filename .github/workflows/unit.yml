@@ -2,23 +2,23 @@ on: [push, pull_request]
 name: Unit Testing
 jobs:
   test:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     strategy:
       fail-fast: false
       matrix:
         go-version:
-          - "1.22"
+          - "1.15"
 
     env:
       GO111MODULE: "on"
 
     steps:
       - name: Setup Go ${{ matrix.go-version }}
-        uses: actions/setup-go@v5
+        uses: actions/setup-go@v2
         with:
           go-version: ${{ matrix.go-version }}
 
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v2
 
       - name: Setup environment
         run: |
@@ -26,7 +26,8 @@ jobs:
           cd "$(mktemp -d)"
           go mod init unit_tests
 
-          go install golang.org/x/tools/cmd/goimports@latest
+          # Pin to a version that Go v1.15 supports
+          go get golang.org/x/tools/cmd/goimports@v0.8.0
 
       - name: Run go vet
         run: |

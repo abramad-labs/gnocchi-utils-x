@@ -1,7 +1,6 @@
 package clientconfig
 
 import (
-	"context"
 	"errors"
 	"fmt"
 	"net/http"
@@ -9,15 +8,14 @@ import (
 	"reflect"
 	"strings"
 
-	"github.com/gophercloud/gophercloud/v2"
-	"github.com/gophercloud/gophercloud/v2/openstack"
-	"github.com/gophercloud/utils/v2/env"
-	"github.com/gophercloud/utils/v2/gnocchi"
-	"github.com/gophercloud/utils/v2/internal"
+	"github.com/abramad-labs/gophercloud-utils-x/env"
+	"github.com/abramad-labs/gophercloud-utils-x/gnocchi"
+	"github.com/abramad-labs/gophercloud-utils-x/internal"
+	"github.com/gophercloud/gophercloud"
+	"github.com/gophercloud/gophercloud/openstack"
 
-	"github.com/gofrs/uuid/v5"
-
-	yaml "gopkg.in/yaml.v3"
+	"github.com/hashicorp/go-uuid"
+	yaml "gopkg.in/yaml.v2"
 )
 
 // AuthType respresents a valid method of authentication.
@@ -332,7 +330,7 @@ func GetCloudFromYAML(opts *ClientOpts) (*Cloud, error) {
 
 	cloud.Interface = ""
 
-	return cloud, err
+	return cloud, nil
 }
 
 // AuthOptions creates a gophercloud.AuthOptions structure with the
@@ -728,17 +726,17 @@ func v3auth(cloud *Cloud, opts *ClientOpts) (*gophercloud.AuthOptions, error) {
 
 // AuthenticatedClient is a convenience function to get a new provider client
 // based on a clouds.yaml entry.
-func AuthenticatedClient(ctx context.Context, opts *ClientOpts) (*gophercloud.ProviderClient, error) {
+func AuthenticatedClient(opts *ClientOpts) (*gophercloud.ProviderClient, error) {
 	ao, err := AuthOptions(opts)
 	if err != nil {
 		return nil, err
 	}
 
-	return openstack.AuthenticatedClient(ctx, *ao)
+	return openstack.AuthenticatedClient(*ao)
 }
 
 // NewServiceClient is a convenience function to get a new service client.
-func NewServiceClient(ctx context.Context, service string, opts *ClientOpts) (*gophercloud.ServiceClient, error) {
+func NewServiceClient(service string, opts *ClientOpts) (*gophercloud.ServiceClient, error) {
 	cloud := new(Cloud)
 
 	// If no opts were passed in, create an empty ClientOpts.
@@ -840,7 +838,7 @@ func NewServiceClient(ctx context.Context, service string, opts *ClientOpts) (*g
 		pClient.HTTPClient = http.Client{Transport: transport}
 	}
 
-	err = openstack.Authenticate(ctx, pClient, *ao)
+	err = openstack.Authenticate(pClient, *ao)
 	if err != nil {
 		return nil, err
 	}
@@ -891,6 +889,8 @@ func NewServiceClient(ctx context.Context, service string, opts *ClientOpts) (*g
 		return openstack.NewBareMetalV1(pClient, eo)
 	case "baremetal-introspection":
 		return openstack.NewBareMetalIntrospectionV1(pClient, eo)
+	case "clustering":
+		return openstack.NewClusteringV1(pClient, eo)
 	case "compute":
 		return openstack.NewComputeV2(pClient, eo)
 	case "container":
@@ -918,17 +918,17 @@ func NewServiceClient(ctx context.Context, service string, opts *ClientOpts) (*g
 			return nil, fmt.Errorf("invalid identity API version")
 		}
 	case "image":
-		return openstack.NewImageV2(pClient, eo)
+		return openstack.NewImageServiceV2(pClient, eo)
 	case "key-manager":
 		return openstack.NewKeyManagerV1(pClient, eo)
 	case "load-balancer":
 		return openstack.NewLoadBalancerV2(pClient, eo)
 	case "messaging":
-		clientID, err := uuid.NewV4()
+		clientID, err := uuid.GenerateUUID()
 		if err != nil {
 			return nil, fmt.Errorf("failed to generate UUID: %w", err)
 		}
-		return openstack.NewMessagingV2(pClient, clientID.String(), eo)
+		return openstack.NewMessagingV2(pClient, clientID, eo)
 	case "network":
 		return openstack.NewNetworkV2(pClient, eo)
 	case "object-store":

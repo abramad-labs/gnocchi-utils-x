@@ -1,12 +1,12 @@
-module github.com/gophercloud/utils/v2
-
-go 1.22
+module github.com/abramad-labs/gophercloud-utils-x
 
 require (
-	github.com/gofrs/uuid/v5 v5.3.0
-	github.com/gophercloud/gophercloud/v2 v2.1.1
+	github.com/gophercloud/gophercloud v1.3.0
+	github.com/hashicorp/go-uuid v1.0.3
 	github.com/mitchellh/go-homedir v1.1.0
-	golang.org/x/sys v0.25.0
-	golang.org/x/text v0.18.0
-	gopkg.in/yaml.v3 v3.0.1
+	golang.org/x/sys v0.2.0
+	golang.org/x/text v0.4.0
+	gopkg.in/yaml.v2 v2.4.0
 )
+
+go 1.15

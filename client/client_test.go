@@ -4,7 +4,7 @@ import (
 	"net/http"
 	"testing"
 
-	th "github.com/gophercloud/gophercloud/v2/testhelper"
+	th "github.com/gophercloud/gophercloud/testhelper"
 )
 
 func TestFormatHeaders(t *testing.T) {

@@ -1,14 +1,12 @@
 package snapshots
 
 import (
-	"context"
-
-	"github.com/gophercloud/gophercloud/v2"
-	"github.com/gophercloud/gophercloud/v2/openstack/blockstorage/v2/snapshots"
+	"github.com/gophercloud/gophercloud"
+	"github.com/gophercloud/gophercloud/openstack/blockstorage/v2/snapshots"
 )
 
 // IDFromName is a convenience function that returns a snapshot's ID given its name.
-func IDFromName(ctx context.Context, client *gophercloud.ServiceClient, name string) (string, error) {
+func IDFromName(client *gophercloud.ServiceClient, name string) (string, error) {
 	count := 0
 	id := ""
 
@@ -16,7 +14,7 @@ func IDFromName(ctx context.Context, client *gophercloud.ServiceClient, name str
 		Name: name,
 	}
 
-	pages, err := snapshots.List(client, listOpts).AllPages(ctx)
+	pages, err := snapshots.List(client, listOpts).AllPages()
 	if err != nil {
 		return "", err
 	}

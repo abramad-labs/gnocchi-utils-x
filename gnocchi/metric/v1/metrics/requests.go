@@ -1,10 +1,8 @@
 package metrics
 
 import (
-	"context"
-
-	"github.com/gophercloud/gophercloud/v2"
-	"github.com/gophercloud/gophercloud/v2/pagination"
+	"github.com/gophercloud/gophercloud"
+	"github.com/gophercloud/gophercloud/pagination"
 )
 
 // ListOptsBuilder allows extensions to add additional parameters to the
@@ -70,8 +68,8 @@ func List(c *gophercloud.ServiceClient, opts ListOptsBuilder) pagination.Pager {
 }
 
 // Get retrieves a specific Gnocchi metric based on its id.
-func Get(ctx context.Context, c *gophercloud.ServiceClient, metricID string) (r GetResult) {
-	_, r.Err = c.Get(ctx, getURL(c, metricID), &r.Body, nil)
+func Get(c *gophercloud.ServiceClient, metricID string) (r GetResult) {
+	_, r.Err = c.Get(getURL(c, metricID), &r.Body, nil)
 	return
 }
 
@@ -111,25 +109,25 @@ func (opts CreateOpts) ToMetricCreateMap() (map[string]interface{}, error) {
 }
 
 // Create requests the creation of a new Gnocchi metric on the server.
-func Create(ctx context.Context, client *gophercloud.ServiceClient, opts CreateOptsBuilder) (r CreateResult) {
+func Create(client *gophercloud.ServiceClient, opts CreateOptsBuilder) (r CreateResult) {
 	b, err := opts.ToMetricCreateMap()
 	if err != nil {
 		r.Err = err
 		return
 	}
-	_, r.Err = client.Post(ctx, createURL(client), b, &r.Body, &gophercloud.RequestOpts{
+	_, r.Err = client.Post(createURL(client), b, &r.Body, &gophercloud.RequestOpts{
 		OkCodes: []int{201},
 	})
 	return
 }
 
 // Delete accepts a unique ID and deletes the Gnocchi metric associated with it.
-func Delete(ctx context.Context, c *gophercloud.ServiceClient, metricID string) (r DeleteResult) {
+func Delete(c *gophercloud.ServiceClient, metricID string) (r DeleteResult) {
 	requestOpts := &gophercloud.RequestOpts{
 		MoreHeaders: map[string]string{
 			"Accept": "application/json, */*",
 		},
 	}
-	_, r.Err = c.Delete(ctx, deleteURL(c, metricID), requestOpts)
+	_, r.Err = c.Delete(deleteURL(c, metricID), requestOpts)
 	return
 }

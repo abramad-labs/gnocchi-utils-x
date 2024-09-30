@@ -1,15 +1,14 @@
 package testing
 
 import (
-	"context"
 	"fmt"
 	"net/http"
 	"testing"
 
-	"github.com/gophercloud/gophercloud/v2/pagination"
-	th "github.com/gophercloud/gophercloud/v2/testhelper"
-	"github.com/gophercloud/utils/v2/gnocchi/metric/v1/archivepolicies"
-	fake "github.com/gophercloud/utils/v2/gnocchi/testhelper/client"
+	"github.com/abramad-labs/gophercloud-utils-x/gnocchi/metric/v1/archivepolicies"
+	fake "github.com/abramad-labs/gophercloud-utils-x/gnocchi/testhelper/client"
+	"github.com/gophercloud/gophercloud/pagination"
+	th "github.com/gophercloud/gophercloud/testhelper"
 )
 
 func TestListArchivePolicies(t *testing.T) {
@@ -28,7 +27,7 @@ func TestListArchivePolicies(t *testing.T) {
 
 	expected := ListArchivePoliciesExpected
 	pages := 0
-	err := archivepolicies.List(fake.ServiceClient()).EachPage(context.TODO(), func(_ context.Context, page pagination.Page) (bool, error) {
+	err := archivepolicies.List(fake.ServiceClient()).EachPage(func(page pagination.Page) (bool, error) {
 		pages++
 
 		actual, err := archivepolicies.ExtractArchivePolicies(page)
@@ -59,7 +58,7 @@ func TestListArchivePoliciesAllPages(t *testing.T) {
 		fmt.Fprintf(w, ArchivePoliciesListResult)
 	})
 
-	allPages, err := archivepolicies.List(fake.ServiceClient()).AllPages(context.TODO())
+	allPages, err := archivepolicies.List(fake.ServiceClient()).AllPages()
 	th.AssertNoErr(t, err)
 	_, err = archivepolicies.ExtractArchivePolicies(allPages)
 	th.AssertNoErr(t, err)
@@ -79,7 +78,7 @@ func TestGetArchivePolicy(t *testing.T) {
 		fmt.Fprintf(w, ArchivePolicyGetResult)
 	})
 
-	s, err := archivepolicies.Get(context.TODO(), fake.ServiceClient(), "test_policy").Extract()
+	s, err := archivepolicies.Get(fake.ServiceClient(), "test_policy").Extract()
 	th.AssertNoErr(t, err)
 
 	th.AssertDeepEquals(t, s.AggregationMethods, []string{
@@ -139,7 +138,7 @@ func TestCreate(t *testing.T) {
 		},
 		Name: "test_policy",
 	}
-	s, err := archivepolicies.Create(context.TODO(), fake.ServiceClient(), opts).Extract()
+	s, err := archivepolicies.Create(fake.ServiceClient(), opts).Extract()
 	th.AssertNoErr(t, err)
 
 	th.AssertDeepEquals(t, s.AggregationMethods, []string{
@@ -192,7 +191,7 @@ func TestUpdateArchivePolicy(t *testing.T) {
 			},
 		},
 	}
-	s, err := archivepolicies.Update(context.TODO(), fake.ServiceClient(), "test_policy", updateOpts).Extract()
+	s, err := archivepolicies.Update(fake.ServiceClient(), "test_policy", updateOpts).Extract()
 	th.AssertNoErr(t, err)
 
 	th.AssertDeepEquals(t, s.AggregationMethods, []string{
@@ -224,6 +223,6 @@ func TestDelete(t *testing.T) {
 		w.WriteHeader(http.StatusNoContent)
 	})
 
-	res := archivepolicies.Delete(context.TODO(), fake.ServiceClient(), "test_policy")
+	res := archivepolicies.Delete(fake.ServiceClient(), "test_policy")
 	th.AssertNoErr(t, res.Err)
 }

@@ -1,6 +1,6 @@
 package resources
 
-import "github.com/gophercloud/gophercloud/v2"
+import "github.com/gophercloud/gophercloud"
 
 const resourcePath = "resource"
 

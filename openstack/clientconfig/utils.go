@@ -9,8 +9,8 @@ import (
 	"path/filepath"
 	"reflect"
 
-	"github.com/gophercloud/gophercloud/v2"
-	"github.com/gophercloud/utils/v2/env"
+	"github.com/abramad-labs/gophercloud-utils-x/env"
+	"github.com/gophercloud/gophercloud"
 )
 
 // defaultIfEmpty is a helper function to make it cleaner to set default value
@@ -46,9 +46,6 @@ func mergeClouds(override, cloud interface{}) (*Cloud, error) {
 	var mergedCloud Cloud
 	mergedInterface := mergeInterfaces(overrideInterface, cloudInterface)
 	mergedJson, err := json.Marshal(mergedInterface)
-	if err != nil {
-		return nil, err
-	}
 	err = json.Unmarshal(mergedJson, &mergedCloud)
 	if err != nil {
 		return nil, err

@@ -1,14 +1,12 @@
 package volumes
 
 import (
-	"context"
-
-	"github.com/gophercloud/gophercloud/v2"
-	"github.com/gophercloud/gophercloud/v2/openstack/blockstorage/v2/volumes"
+	"github.com/gophercloud/gophercloud"
+	"github.com/gophercloud/gophercloud/openstack/blockstorage/v2/volumes"
 )
 
 // IDFromName is a convenience function that returns a volume's ID given its name.
-func IDFromName(ctx context.Context, client *gophercloud.ServiceClient, name string) (string, error) {
+func IDFromName(client *gophercloud.ServiceClient, name string) (string, error) {
 	count := 0
 	id := ""
 
@@ -16,7 +14,7 @@ func IDFromName(ctx context.Context, client *gophercloud.ServiceClient, name str
 		Name: name,
 	}
 
-	pages, err := volumes.List(client, listOpts).AllPages(ctx)
+	pages, err := volumes.List(client, listOpts).AllPages()
 	if err != nil {
 		return "", err
 	}

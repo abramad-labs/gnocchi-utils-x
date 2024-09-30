@@ -1,16 +1,15 @@
 package testing
 
 import (
-	"context"
 	"fmt"
 	"net/http"
 	"testing"
 	"time"
 
-	"github.com/gophercloud/gophercloud/v2/pagination"
-	th "github.com/gophercloud/gophercloud/v2/testhelper"
-	"github.com/gophercloud/utils/v2/gnocchi/metric/v1/resources"
-	fake "github.com/gophercloud/utils/v2/gnocchi/testhelper/client"
+	"github.com/abramad-labs/gophercloud-utils-x/gnocchi/metric/v1/resources"
+	fake "github.com/abramad-labs/gophercloud-utils-x/gnocchi/testhelper/client"
+	"github.com/gophercloud/gophercloud/pagination"
+	th "github.com/gophercloud/gophercloud/testhelper"
 )
 
 func TestList(t *testing.T) {
@@ -37,7 +36,7 @@ func TestList(t *testing.T) {
 
 	count := 0
 
-	resources.List(fake.ServiceClient(), resources.ListOpts{}, "generic").EachPage(context.TODO(), func(_ context.Context, page pagination.Page) (bool, error) {
+	resources.List(fake.ServiceClient(), resources.ListOpts{}, "generic").EachPage(func(page pagination.Page) (bool, error) {
 		count++
 		actual, err := resources.ExtractResources(page)
 		if err != nil {
@@ -74,7 +73,7 @@ func TestGet(t *testing.T) {
 		fmt.Fprintf(w, ResourceGetResult)
 	})
 
-	s, err := resources.Get(context.TODO(), fake.ServiceClient(), "compute_instance_network", "75274f99-faf6-4112-a6d5-2794cb07c789").Extract()
+	s, err := resources.Get(fake.ServiceClient(), "compute_instance_network", "75274f99-faf6-4112-a6d5-2794cb07c789").Extract()
 	th.AssertNoErr(t, err)
 
 	th.AssertEquals(t, s.CreatedByProjectID, "3d40ca37723449118987b9f288f4ae84")
@@ -122,7 +121,7 @@ func TestCreateWithoutMetrics(t *testing.T) {
 		ProjectID: "4154f088-8333-4e04-94c4-1155c33c0fc9",
 		UserID:    "bd5874d6-6662-4b24-a9f01c128871e4ac",
 	}
-	s, err := resources.Create(context.TODO(), fake.ServiceClient(), "generic", opts).Extract()
+	s, err := resources.Create(fake.ServiceClient(), "generic", opts).Extract()
 	th.AssertNoErr(t, err)
 
 	th.AssertEquals(t, s.CreatedByProjectID, "3d40ca37-7234-4911-8987b9f288f4ae84")
@@ -170,7 +169,7 @@ func TestCreateLinkMetrics(t *testing.T) {
 			"network.outgoing.bytes.rate": "dc9f3198-155b-4b88-a92c-58a3853ce2b2",
 		},
 	}
-	s, err := resources.Create(context.TODO(), fake.ServiceClient(), "compute_instance_network", opts).Extract()
+	s, err := resources.Create(fake.ServiceClient(), "compute_instance_network", opts).Extract()
 	th.AssertNoErr(t, err)
 
 	th.AssertEquals(t, s.CreatedByProjectID, "3d40ca37-7234-4911-8987b9f288f4ae84")
@@ -220,7 +219,7 @@ func TestCreateWithMetrics(t *testing.T) {
 			},
 		},
 	}
-	s, err := resources.Create(context.TODO(), fake.ServiceClient(), "compute_instance_disk", opts).Extract()
+	s, err := resources.Create(fake.ServiceClient(), "compute_instance_disk", opts).Extract()
 	th.AssertNoErr(t, err)
 
 	th.AssertEquals(t, s.CreatedByProjectID, "3d40ca37-7234-4911-8987b9f288f4ae84")
@@ -265,7 +264,7 @@ func TestUpdateLinkMetrics(t *testing.T) {
 		EndedAt: &endedAt,
 		Metrics: &metrics,
 	}
-	s, err := resources.Update(context.TODO(), fake.ServiceClient(), "compute_instance_network", "23d5d3f7-9dfa-4f73-b72b-8b0b0063ec55", updateOpts).Extract()
+	s, err := resources.Update(fake.ServiceClient(), "compute_instance_network", "23d5d3f7-9dfa-4f73-b72b-8b0b0063ec55", updateOpts).Extract()
 	th.AssertNoErr(t, err)
 
 	th.AssertEquals(t, s.CreatedByProjectID, "3d40ca37-7234-4911-8987b9f288f4ae84")
@@ -312,7 +311,7 @@ func TestUpdateCreateMetrics(t *testing.T) {
 		StartedAt: &startedAt,
 		Metrics:   &metrics,
 	}
-	s, err := resources.Update(context.TODO(), fake.ServiceClient(), "compute_instance_network", "23d5d3f7-9dfa-4f73-b72b-8b0b0063ec55", updateOpts).Extract()
+	s, err := resources.Update(fake.ServiceClient(), "compute_instance_network", "23d5d3f7-9dfa-4f73-b72b-8b0b0063ec55", updateOpts).Extract()
 	th.AssertNoErr(t, err)
 
 	th.AssertEquals(t, s.CreatedByProjectID, "3d40ca37-7234-4911-8987b9f288f4ae84")
@@ -342,6 +341,6 @@ func TestDelete(t *testing.T) {
 		w.WriteHeader(http.StatusNoContent)
 	})
 
-	res := resources.Delete(context.TODO(), fake.ServiceClient(), "generic", "23d5d3f7-9dfa-4f73-b72b-8b0b0063ec55")
+	res := resources.Delete(fake.ServiceClient(), "generic", "23d5d3f7-9dfa-4f73-b72b-8b0b0063ec55")
 	th.AssertNoErr(t, res.Err)
 }

@@ -4,8 +4,8 @@ import (
 	"net/url"
 	"time"
 
+	"github.com/abramad-labs/gophercloud-utils-x/gnocchi"
 	"github.com/gophercloud/gophercloud"
-	"github.com/gophercloud/utils/gnocchi"
 )
 
 type AggregateQueryBuilder interface {

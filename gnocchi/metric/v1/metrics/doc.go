@@ -7,7 +7,7 @@ Example of Listing metrics
 		Limit: 25,
 	}
 
-	allPages, err := metrics.List(gnocchiClient, listOpts).AllPages(ctx)
+	allPages, err := metrics.List(gnocchiClient, listOpts).AllPages()
 	if err != nil {
 		panic(err)
 	}

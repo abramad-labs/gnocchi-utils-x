@@ -8,7 +8,7 @@ Example of Listing resources
 		Details: True,
 	}
 
-	allPages, err := resources.List(gnocchiClient, listOpts, resourceType).AllPages(ctx)
+	allPages, err := resources.List(gnocchiClient, listOpts, resourceType).AllPages()
 	if err != nil {
 		panic(err)
 	}

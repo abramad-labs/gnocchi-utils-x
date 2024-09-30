@@ -1,13 +1,12 @@
 package testing
 
 import (
-	"context"
 	"testing"
 
-	o "github.com/gophercloud/gophercloud/v2/openstack/objectstorage/v1/objects"
-	th "github.com/gophercloud/gophercloud/v2/testhelper"
-	fake "github.com/gophercloud/gophercloud/v2/testhelper/client"
-	"github.com/gophercloud/utils/v2/openstack/objectstorage/v1/objects"
+	"github.com/abramad-labs/gophercloud-utils-x/openstack/objectstorage/v1/objects"
+	o "github.com/gophercloud/gophercloud/openstack/objectstorage/v1/objects"
+	th "github.com/gophercloud/gophercloud/testhelper"
+	fake "github.com/gophercloud/gophercloud/testhelper/client"
 )
 
 func TestIsIdentical(t *testing.T) {
@@ -50,7 +49,7 @@ func TestChunkData(t *testing.T) {
 		MultipartManifest: "get",
 	}
 
-	res := o.Download(context.TODO(), fake.ServiceClient(), "testContainer", "testObject", downloadOpts)
+	res := o.Download(fake.ServiceClient(), "testContainer", "testObject", downloadOpts)
 	defer res.Body.Close()
 	th.AssertNoErr(t, res.Err)
 
@@ -67,7 +66,7 @@ func TestChunkData(t *testing.T) {
 		StaticLargeObject: true,
 	}
 
-	actualChunkData, err := objects.GetManifest(context.TODO(), fake.ServiceClient(), gmo)
+	actualChunkData, err := objects.GetManifest(fake.ServiceClient(), gmo)
 	th.AssertNoErr(t, err)
 	th.AssertDeepEquals(t, actualChunkData, expectedMultipartManifest)
 }

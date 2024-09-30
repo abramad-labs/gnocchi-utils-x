@@ -1,12 +1,11 @@
 package resourcetypes
 
 import (
-	"context"
 	"fmt"
 	"strings"
 
-	"github.com/gophercloud/gophercloud/v2"
-	"github.com/gophercloud/gophercloud/v2/pagination"
+	"github.com/gophercloud/gophercloud"
+	"github.com/gophercloud/gophercloud/pagination"
 )
 
 // List makes a request against the Gnocchi API to list resource types.
@@ -17,8 +16,8 @@ func List(client *gophercloud.ServiceClient) pagination.Pager {
 }
 
 // Get retrieves a specific Gnocchi resource type based on its name.
-func Get(ctx context.Context, c *gophercloud.ServiceClient, resourceTypeName string) (r GetResult) {
-	_, r.Err = c.Get(ctx, getURL(c, resourceTypeName), &r.Body, nil)
+func Get(c *gophercloud.ServiceClient, resourceTypeName string) (r GetResult) {
+	_, r.Err = c.Get(getURL(c, resourceTypeName), &r.Body, nil)
 	return
 }
 
@@ -86,13 +85,13 @@ func (opts CreateOpts) ToResourceTypeCreateMap() (map[string]interface{}, error)
 }
 
 // Create requests the creation of a new Gnocchi resource type on the server.
-func Create(ctx context.Context, client *gophercloud.ServiceClient, opts CreateOptsBuilder) (r CreateResult) {
+func Create(client *gophercloud.ServiceClient, opts CreateOptsBuilder) (r CreateResult) {
 	b, err := opts.ToResourceTypeCreateMap()
 	if err != nil {
 		r.Err = err
 		return
 	}
-	_, r.Err = client.Post(ctx, createURL(client), b, &r.Body, &gophercloud.RequestOpts{
+	_, r.Err = client.Post(createURL(client), b, &r.Body, &gophercloud.RequestOpts{
 		OkCodes: []int{201},
 	})
 	return
@@ -176,13 +175,13 @@ func (opts UpdateOpts) ToResourceTypeUpdateMap() ([]map[string]interface{}, erro
 }
 
 // Update requests the update operation over existsing Gnocchi resource type.
-func Update(ctx context.Context, client *gophercloud.ServiceClient, resourceTypeName string, opts UpdateOptsBuilder) (r UpdateResult) {
+func Update(client *gophercloud.ServiceClient, resourceTypeName string, opts UpdateOptsBuilder) (r UpdateResult) {
 	b, err := opts.ToResourceTypeUpdateMap()
 	if err != nil {
 		r.Err = err
 		return
 	}
-	_, r.Err = client.Patch(ctx, updateURL(client, resourceTypeName), b, &r.Body, &gophercloud.RequestOpts{
+	_, r.Err = client.Patch(updateURL(client, resourceTypeName), b, &r.Body, &gophercloud.RequestOpts{
 		OkCodes: []int{200},
 		MoreHeaders: map[string]string{
 			"Content-Type": "application/json-patch+json",
@@ -192,12 +191,12 @@ func Update(ctx context.Context, client *gophercloud.ServiceClient, resourceType
 }
 
 // Delete accepts a human-readable name and deletes the Gnocchi resource type associated with it.
-func Delete(ctx context.Context, c *gophercloud.ServiceClient, resourceTypeName string) (r DeleteResult) {
+func Delete(c *gophercloud.ServiceClient, resourceTypeName string) (r DeleteResult) {
 	requestOpts := &gophercloud.RequestOpts{
 		MoreHeaders: map[string]string{
 			"Accept": "application/json, */*",
 		},
 	}
-	_, r.Err = c.Delete(ctx, deleteURL(c, resourceTypeName), requestOpts)
+	_, r.Err = c.Delete(deleteURL(c, resourceTypeName), requestOpts)
 	return
 }

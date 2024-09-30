@@ -5,9 +5,9 @@ import (
 	"net/url"
 	"time"
 
+	"github.com/abramad-labs/gophercloud-utils-x/gnocchi"
 	"github.com/gophercloud/gophercloud"
 	"github.com/gophercloud/gophercloud/pagination"
-	"github.com/gophercloud/utils/gnocchi"
 )
 
 // ListOptsBuilder allows extensions to add additional parameters to the

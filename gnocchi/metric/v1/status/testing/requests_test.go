@@ -1,14 +1,13 @@
 package testing
 
 import (
-	"context"
 	"fmt"
 	"net/http"
 	"testing"
 
-	th "github.com/gophercloud/gophercloud/v2/testhelper"
-	"github.com/gophercloud/utils/v2/gnocchi/metric/v1/status"
-	fake "github.com/gophercloud/utils/v2/gnocchi/testhelper/client"
+	"github.com/abramad-labs/gophercloud-utils-x/gnocchi/metric/v1/status"
+	fake "github.com/abramad-labs/gophercloud-utils-x/gnocchi/testhelper/client"
+	th "github.com/gophercloud/gophercloud/testhelper"
 )
 
 func TestGetWithDetails(t *testing.T) {
@@ -31,7 +30,7 @@ func TestGetWithDetails(t *testing.T) {
 		Details: &details,
 	}
 
-	s, err := status.Get(context.TODO(), fake.ServiceClient(), getOpts).Extract()
+	s, err := status.Get(fake.ServiceClient(), getOpts).Extract()
 	th.AssertNoErr(t, err)
 	th.AssertDeepEquals(t, s.Metricd, GetStatusWithDetailsExpected.Metricd)
 	th.AssertDeepEquals(t, s.Storage, GetStatusWithDetailsExpected.Storage)
@@ -57,7 +56,7 @@ func TestGetWithoutDetails(t *testing.T) {
 		Details: &details,
 	}
 
-	s, err := status.Get(context.TODO(), fake.ServiceClient(), getOpts).Extract()
+	s, err := status.Get(fake.ServiceClient(), getOpts).Extract()
 	th.AssertNoErr(t, err)
 	th.AssertDeepEquals(t, s.Metricd, GetStatusWithoutDetailsExpected.Metricd)
 	th.AssertDeepEquals(t, s.Storage, GetStatusWithoutDetailsExpected.Storage)

@@ -7,13 +7,13 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/gophercloud/gophercloud/v2"
-	"github.com/gophercloud/gophercloud/v2/openstack"
-	"github.com/gophercloud/gophercloud/v2/openstack/objectstorage/v1/swauth"
-	osClient "github.com/gophercloud/utils/v2/client"
-	"github.com/gophercloud/utils/v2/internal"
-	"github.com/gophercloud/utils/v2/openstack/clientconfig"
-	"github.com/gophercloud/utils/v2/terraform/mutexkv"
+	osClient "github.com/abramad-labs/gophercloud-utils-x/client"
+	"github.com/abramad-labs/gophercloud-utils-x/internal"
+	"github.com/abramad-labs/gophercloud-utils-x/openstack/clientconfig"
+	"github.com/abramad-labs/gophercloud-utils-x/terraform/mutexkv"
+	"github.com/gophercloud/gophercloud"
+	"github.com/gophercloud/gophercloud/openstack"
+	"github.com/gophercloud/gophercloud/openstack/objectstorage/v1/swauth"
 )
 
 type Config struct {
@@ -69,7 +69,7 @@ type Config struct {
 // authenticates to an OpenStack cloud.
 //
 // Individual Service Clients are created later in this file.
-func (c *Config) LoadAndValidate(ctx context.Context) error {
+func (c *Config) LoadAndValidate() error {
 	// Make sure at least one of auth_url or cloud was specified.
 	if c.IdentityEndpoint == "" && c.Cloud == "" {
 		return fmt.Errorf("One of 'auth_url' or 'cloud' must be specified")
@@ -173,6 +173,8 @@ func (c *Config) LoadAndValidate(ctx context.Context) error {
 		return err
 	}
 
+	client.Context = c.Context
+
 	// Set UserAgent
 	client.UserAgent.Prepend(terraformUserAgent(c.TerraformVersion, c.SDKVersion))
 
@@ -209,7 +211,7 @@ func (c *Config) LoadAndValidate(ctx context.Context) error {
 	}
 
 	if !c.DelayedAuth && !c.Swauth {
-		err = openstack.Authenticate(ctx, client, *ao)
+		err = openstack.Authenticate(client, *ao)
 		if err != nil {
 			return err
 		}
@@ -221,7 +223,7 @@ func (c *Config) LoadAndValidate(ctx context.Context) error {
 	return nil
 }
 
-func (c *Config) Authenticate(ctx context.Context) error {
+func (c *Config) Authenticate() error {
 	if !c.DelayedAuth {
 		return nil
 	}
@@ -234,7 +236,7 @@ func (c *Config) Authenticate(ctx context.Context) error {
 	}
 
 	if !c.authenticated {
-		if err := openstack.Authenticate(ctx, c.OsClient, *c.AuthOpts); err != nil {
+		if err := openstack.Authenticate(c.OsClient, *c.AuthOpts); err != nil {
 			c.authFailed = err
 			return err
 		}
@@ -280,8 +282,8 @@ func (c *Config) DetermineRegion(region string) string {
 
 type commonCommonServiceClientInitFunc func(*gophercloud.ProviderClient, gophercloud.EndpointOpts) (*gophercloud.ServiceClient, error)
 
-func (c *Config) CommonServiceClientInit(ctx context.Context, newClient commonCommonServiceClientInitFunc, region, service string) (*gophercloud.ServiceClient, error) {
-	if err := c.Authenticate(ctx); err != nil {
+func (c *Config) CommonServiceClientInit(newClient commonCommonServiceClientInitFunc, region, service string) (*gophercloud.ServiceClient, error) {
+	if err := c.Authenticate(); err != nil {
 		return nil, err
 	}
 
@@ -300,36 +302,36 @@ func (c *Config) CommonServiceClientInit(ctx context.Context, newClient commonCo
 	return client, nil
 }
 
-func (c *Config) BlockStorageV1Client(ctx context.Context, region string) (*gophercloud.ServiceClient, error) {
-	return c.CommonServiceClientInit(ctx, openstack.NewBlockStorageV1, region, "volume")
+func (c *Config) BlockStorageV1Client(region string) (*gophercloud.ServiceClient, error) {
+	return c.CommonServiceClientInit(openstack.NewBlockStorageV1, region, "volume")
 }
 
-func (c *Config) BlockStorageV2Client(ctx context.Context, region string) (*gophercloud.ServiceClient, error) {
-	return c.CommonServiceClientInit(ctx, openstack.NewBlockStorageV2, region, "volumev2")
+func (c *Config) BlockStorageV2Client(region string) (*gophercloud.ServiceClient, error) {
+	return c.CommonServiceClientInit(openstack.NewBlockStorageV2, region, "volumev2")
 }
 
-func (c *Config) BlockStorageV3Client(ctx context.Context, region string) (*gophercloud.ServiceClient, error) {
-	return c.CommonServiceClientInit(ctx, openstack.NewBlockStorageV3, region, "volumev3")
+func (c *Config) BlockStorageV3Client(region string) (*gophercloud.ServiceClient, error) {
+	return c.CommonServiceClientInit(openstack.NewBlockStorageV3, region, "volumev3")
 }
 
-func (c *Config) ComputeV2Client(ctx context.Context, region string) (*gophercloud.ServiceClient, error) {
-	return c.CommonServiceClientInit(ctx, openstack.NewComputeV2, region, "compute")
+func (c *Config) ComputeV2Client(region string) (*gophercloud.ServiceClient, error) {
+	return c.CommonServiceClientInit(openstack.NewComputeV2, region, "compute")
 }
 
-func (c *Config) DNSV2Client(ctx context.Context, region string) (*gophercloud.ServiceClient, error) {
-	return c.CommonServiceClientInit(ctx, openstack.NewDNSV2, region, "dns")
+func (c *Config) DNSV2Client(region string) (*gophercloud.ServiceClient, error) {
+	return c.CommonServiceClientInit(openstack.NewDNSV2, region, "dns")
 }
 
-func (c *Config) IdentityV3Client(ctx context.Context, region string) (*gophercloud.ServiceClient, error) {
-	return c.CommonServiceClientInit(ctx, openstack.NewIdentityV3, region, "identity")
+func (c *Config) IdentityV3Client(region string) (*gophercloud.ServiceClient, error) {
+	return c.CommonServiceClientInit(openstack.NewIdentityV3, region, "identity")
 }
 
-func (c *Config) ImageV2Client(ctx context.Context, region string) (*gophercloud.ServiceClient, error) {
-	return c.CommonServiceClientInit(ctx, openstack.NewImageV2, region, "image")
+func (c *Config) ImageV2Client(region string) (*gophercloud.ServiceClient, error) {
+	return c.CommonServiceClientInit(openstack.NewImageServiceV2, region, "image")
 }
 
-func (c *Config) MessagingV2Client(ctx context.Context, region string) (*gophercloud.ServiceClient, error) {
-	if err := c.Authenticate(ctx); err != nil {
+func (c *Config) MessagingV2Client(region string) (*gophercloud.ServiceClient, error) {
+	if err := c.Authenticate(); err != nil {
 		return nil, err
 	}
 
@@ -348,11 +350,11 @@ func (c *Config) MessagingV2Client(ctx context.Context, region string) (*gopherc
 	return client, nil
 }
 
-func (c *Config) NetworkingV2Client(ctx context.Context, region string) (*gophercloud.ServiceClient, error) {
-	return c.CommonServiceClientInit(ctx, openstack.NewNetworkV2, region, "network")
+func (c *Config) NetworkingV2Client(region string) (*gophercloud.ServiceClient, error) {
+	return c.CommonServiceClientInit(openstack.NewNetworkV2, region, "network")
 }
 
-func (c *Config) ObjectStorageV1Client(ctx context.Context, region string) (*gophercloud.ServiceClient, error) {
+func (c *Config) ObjectStorageV1Client(region string) (*gophercloud.ServiceClient, error) {
 	var client *gophercloud.ServiceClient
 	var err error
 
@@ -360,7 +362,7 @@ func (c *Config) ObjectStorageV1Client(ctx context.Context, region string) (*gop
 	// Otherwise, use a Keystone-based client.
 	if c.Swauth {
 		if !c.DelayedAuth {
-			client, err = swauth.NewObjectStorageV1(ctx, c.OsClient, swauth.AuthOpts{
+			client, err = swauth.NewObjectStorageV1(c.OsClient, swauth.AuthOpts{
 				User: c.Username,
 				Key:  c.Password,
 			})
@@ -376,7 +378,7 @@ func (c *Config) ObjectStorageV1Client(ctx context.Context, region string) (*gop
 			}
 
 			if c.swClient == nil {
-				c.swClient, err = swauth.NewObjectStorageV1(ctx, c.OsClient, swauth.AuthOpts{
+				c.swClient, err = swauth.NewObjectStorageV1(c.OsClient, swauth.AuthOpts{
 					User: c.Username,
 					Key:  c.Password,
 				})
@@ -390,7 +392,7 @@ func (c *Config) ObjectStorageV1Client(ctx context.Context, region string) (*gop
 			client = c.swClient
 		}
 	} else {
-		if err := c.Authenticate(ctx); err != nil {
+		if err := c.Authenticate(); err != nil {
 			return nil, err
 		}
 
@@ -410,28 +412,28 @@ func (c *Config) ObjectStorageV1Client(ctx context.Context, region string) (*gop
 	return client, nil
 }
 
-func (c *Config) OrchestrationV1Client(ctx context.Context, region string) (*gophercloud.ServiceClient, error) {
-	return c.CommonServiceClientInit(ctx, openstack.NewOrchestrationV1, region, "orchestration")
+func (c *Config) OrchestrationV1Client(region string) (*gophercloud.ServiceClient, error) {
+	return c.CommonServiceClientInit(openstack.NewOrchestrationV1, region, "orchestration")
 }
 
-func (c *Config) LoadBalancerV2Client(ctx context.Context, region string) (*gophercloud.ServiceClient, error) {
-	return c.CommonServiceClientInit(ctx, openstack.NewLoadBalancerV2, region, "octavia")
+func (c *Config) LoadBalancerV2Client(region string) (*gophercloud.ServiceClient, error) {
+	return c.CommonServiceClientInit(openstack.NewLoadBalancerV2, region, "octavia")
 }
 
-func (c *Config) DatabaseV1Client(ctx context.Context, region string) (*gophercloud.ServiceClient, error) {
-	return c.CommonServiceClientInit(ctx, openstack.NewDBV1, region, "database")
+func (c *Config) DatabaseV1Client(region string) (*gophercloud.ServiceClient, error) {
+	return c.CommonServiceClientInit(openstack.NewDBV1, region, "database")
 }
 
-func (c *Config) ContainerInfraV1Client(ctx context.Context, region string) (*gophercloud.ServiceClient, error) {
-	return c.CommonServiceClientInit(ctx, openstack.NewContainerInfraV1, region, "container-infra")
+func (c *Config) ContainerInfraV1Client(region string) (*gophercloud.ServiceClient, error) {
+	return c.CommonServiceClientInit(openstack.NewContainerInfraV1, region, "container-infra")
 }
 
-func (c *Config) SharedfilesystemV2Client(ctx context.Context, region string) (*gophercloud.ServiceClient, error) {
-	return c.CommonServiceClientInit(ctx, openstack.NewSharedFileSystemV2, region, "sharev2")
+func (c *Config) SharedfilesystemV2Client(region string) (*gophercloud.ServiceClient, error) {
+	return c.CommonServiceClientInit(openstack.NewSharedFileSystemV2, region, "sharev2")
 }
 
-func (c *Config) KeyManagerV1Client(ctx context.Context, region string) (*gophercloud.ServiceClient, error) {
-	return c.CommonServiceClientInit(ctx, openstack.NewKeyManagerV1, region, "key-manager")
+func (c *Config) KeyManagerV1Client(region string) (*gophercloud.ServiceClient, error) {
+	return c.CommonServiceClientInit(openstack.NewKeyManagerV1, region, "key-manager")
 }
 
 // A wrapper to determine if logging in gophercloud should be enabled, with a fallback

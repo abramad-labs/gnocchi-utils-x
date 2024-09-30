@@ -1,6 +1,6 @@
 package testing
 
-import "github.com/gophercloud/utils/v2/openstack/baremetal/v1/nodes"
+import "github.com/abramad-labs/gophercloud-utils-x/openstack/baremetal/v1/nodes"
 
 const IgnitionConfig = `
 {

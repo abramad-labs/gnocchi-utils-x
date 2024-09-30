@@ -1,17 +1,15 @@
 package availabilityzones
 
 import (
-	"context"
-
-	"github.com/gophercloud/gophercloud/v2"
-	"github.com/gophercloud/gophercloud/v2/openstack/blockstorage/v3/availabilityzones"
+	"github.com/gophercloud/gophercloud"
+	"github.com/gophercloud/gophercloud/openstack/blockstorage/extensions/availabilityzones"
 )
 
 // ListAvailableAvailabilityZones is a convenience function that return a slice of available Availability Zones.
-func ListAvailableAvailabilityZones(ctx context.Context, client *gophercloud.ServiceClient) ([]string, error) {
+func ListAvailableAvailabilityZones(client *gophercloud.ServiceClient) ([]string, error) {
 	var zones []string
 
-	allPages, err := availabilityzones.List(client).AllPages(ctx)
+	allPages, err := availabilityzones.List(client).AllPages()
 	if err != nil {
 		return nil, err
 	}

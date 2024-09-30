@@ -1,16 +1,15 @@
 package testing
 
 import (
-	"context"
 	"fmt"
 	"net/http"
 	"testing"
 	"time"
 
-	"github.com/gophercloud/gophercloud/v2/pagination"
-	th "github.com/gophercloud/gophercloud/v2/testhelper"
-	"github.com/gophercloud/utils/v2/gnocchi/metric/v1/measures"
-	fake "github.com/gophercloud/utils/v2/gnocchi/testhelper/client"
+	"github.com/abramad-labs/gophercloud-utils-x/gnocchi/metric/v1/measures"
+	fake "github.com/abramad-labs/gophercloud-utils-x/gnocchi/testhelper/client"
+	"github.com/gophercloud/gophercloud/pagination"
+	th "github.com/gophercloud/gophercloud/testhelper"
 )
 
 func TestListMeasures(t *testing.T) {
@@ -37,7 +36,7 @@ func TestListMeasures(t *testing.T) {
 	}
 	expected := ListMeasuresExpected
 	pages := 0
-	err := measures.List(fake.ServiceClient(), metricID, opts).EachPage(context.TODO(), func(_ context.Context, page pagination.Page) (bool, error) {
+	err := measures.List(fake.ServiceClient(), metricID, opts).EachPage(func(page pagination.Page) (bool, error) {
 		pages++
 
 		actual, err := measures.ExtractMeasures(page)
@@ -82,7 +81,7 @@ func TestCreateMeasures(t *testing.T) {
 			},
 		},
 	}
-	res := measures.Create(context.TODO(), fake.ServiceClient(), "9e5a6441-1044-4181-b66e-34e180753040", createOpts)
+	res := measures.Create(fake.ServiceClient(), "9e5a6441-1044-4181-b66e-34e180753040", createOpts)
 	th.AssertNoErr(t, res.Err)
 }
 
@@ -130,7 +129,7 @@ func TestBatchCreateMetrics(t *testing.T) {
 			},
 		},
 	}
-	res := measures.BatchCreateMetrics(context.TODO(), fake.ServiceClient(), createOpts)
+	res := measures.BatchCreateMetrics(fake.ServiceClient(), createOpts)
 	th.AssertNoErr(t, res.Err)
 }
 
@@ -210,6 +209,6 @@ func TestBatchCreateResourcesMetrics(t *testing.T) {
 			},
 		},
 	}
-	res := measures.BatchCreateResourcesMetrics(context.TODO(), fake.ServiceClient(), createOpts)
+	res := measures.BatchCreateResourcesMetrics(fake.ServiceClient(), createOpts)
 	th.AssertNoErr(t, res.Err)
 }

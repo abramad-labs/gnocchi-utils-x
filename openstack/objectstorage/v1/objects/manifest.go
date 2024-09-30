@@ -2,7 +2,6 @@ package objects
 
 import (
 	"bufio"
-	"context"
 	"crypto/md5"
 	"encoding/json"
 	"fmt"
@@ -11,8 +10,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/gophercloud/gophercloud/v2"
-	"github.com/gophercloud/gophercloud/v2/openstack/objectstorage/v1/objects"
+	"github.com/gophercloud/gophercloud"
+	"github.com/gophercloud/gophercloud/openstack/objectstorage/v1/objects"
 )
 
 // Manifest represents an object manifest.
@@ -61,7 +60,7 @@ type GetManifestOpts struct {
 }
 
 // https://github.com/openstack/python-swiftclient/blob/e65070964c7b1e04119c87e5f344d39358780d18/swiftclient/service.py#L1916
-func GetManifest(ctx context.Context, client *gophercloud.ServiceClient, opts GetManifestOpts) ([]Manifest, error) {
+func GetManifest(client *gophercloud.ServiceClient, opts GetManifestOpts) ([]Manifest, error) {
 	var manifest []Manifest
 
 	// TODO: test this
@@ -78,7 +77,7 @@ func GetManifest(ctx context.Context, client *gophercloud.ServiceClient, opts Ge
 			Prefix: sPrefix,
 		}
 
-		allPages, err := objects.List(client, sContainer, listOpts).AllPages(ctx)
+		allPages, err := objects.List(client, sContainer, listOpts).AllPages()
 		if err != nil {
 			return nil, fmt.Errorf("unable to list %s: %s", sContainer, err)
 		}
@@ -89,7 +88,7 @@ func GetManifest(ctx context.Context, client *gophercloud.ServiceClient, opts Ge
 		}
 
 		for _, obj := range allObjects {
-			objInfo, err := objects.Get(ctx, client, sContainer, obj, nil).Extract()
+			objInfo, err := objects.Get(client, sContainer, obj, nil).Extract()
 			if err != nil {
 				return nil, fmt.Errorf("unable to get object %s:%s: %s", sContainer, obj, err)
 			}
@@ -113,7 +112,7 @@ func GetManifest(ctx context.Context, client *gophercloud.ServiceClient, opts Ge
 			downloadOpts := objects.DownloadOpts{
 				MultipartManifest: "get",
 			}
-			res := objects.Download(ctx, client, opts.ContainerName, opts.ObjectName, downloadOpts)
+			res := objects.Download(client, opts.ContainerName, opts.ObjectName, downloadOpts)
 			if res.Err != nil {
 				return nil, res.Err
 			}
